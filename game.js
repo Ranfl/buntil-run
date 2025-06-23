@@ -16,14 +16,12 @@ function togglePause() {
   const pauseOverlay = document.getElementById("pauseOverlay");
 
   if (isPaused) {
-    pauseBtn.innerText = "▶ Resume";
-    pauseBtn.style.display = "none"; // Sembunyikan saat pause
+    pauseBtn.style.display = "none";
     pauseOverlay.style.display = "flex";
   } else {
-    pauseBtn.innerText = "⏸ Pause";
     pauseBtn.style.display = "block";
     pauseOverlay.style.display = "none";
-    animate(); // Resume animasi
+    animate();
   }
 }
 
@@ -44,11 +42,9 @@ function initGame() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // Cahaya
   const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
   scene.add(light);
 
-  // === BACKGROUND ===
   const textureLoader = new THREE.TextureLoader();
   const bgTexture = textureLoader.load("https://i.imgur.com/FWUh1Ym.png");
   const bgMaterial = new THREE.MeshBasicMaterial({
@@ -59,7 +55,6 @@ function initGame() {
   background.position.set(0, 20, -80);
   scene.add(background);
 
-  // === GROUND ===
   ground = new THREE.Mesh(
     new THREE.PlaneGeometry(8, 100),
     new THREE.MeshStandardMaterial({ color: 0x222222 })
@@ -68,7 +63,6 @@ function initGame() {
   ground.position.z = -45;
   scene.add(ground);
 
-  // === POHON ===
   trees = [];
   const treeMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
   const leafMat = new THREE.MeshStandardMaterial({ color: 0x006400 });
@@ -89,7 +83,6 @@ function initGame() {
     scene.add(group);
   }
 
-  // === RESET GAME STATE ===
   currentLane = 1;
   frame = 0;
   gameOver = false;
@@ -103,33 +96,29 @@ function initGame() {
     keyListenerAttached = true;
   }
 
-  // === LOAD 3D PLAYER ===
-  const gltfLoader = new THREE.GLTFLoader();
-  gltfLoader.load(
-    "asset/bush_ball/source/bush ball.glb",
+  // Load 3D PLAYER
+  const loader = new THREE.GLTFLoader();
+  loader.load(
+    "https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/bush_ball/source/bush-ball.glb",
     (gltf) => {
       player = gltf.scene;
       player.scale.set(1.5, 1.5, 1.5);
       player.position.y = 0.3;
       scene.add(player);
       updatePlayerPosition();
-
-      // ✅ Setelah player berhasil dimuat, baru mulai animasi
       animate();
     },
     undefined,
     (error) => {
-      console.error("❌ Gagal memuat model player:", error);
+      console.error("❌ Gagal load model player:", error);
     }
   );
 }
 
-// === SCORE DISPLAY ===
 function updateScore() {
   document.getElementById("scoreDisplay").innerText = `Score: ${score}`;
 }
 
-// === START GAME ===
 function startGame() {
   document.getElementById("start-screen").style.display = "none";
   document.getElementById("startOverlay").style.display = "none";
@@ -148,20 +137,17 @@ function startGame() {
     renderer = null;
   }
 
-  initGame(); // animate() dijalankan setelah model selesai dimuat
+  initGame();
 }
 
-// === UPDATE PLAYER POSITION ===
 function updatePlayerPosition() {
   if (!player) return;
   const xPos = [-2.5, 0, 2.5];
   player.position.x = xPos[currentLane];
 }
 
-// === KONTROL GAME ===
 function onKeyDown(e) {
   if (gameOver || isPaused) return;
-
   if (e.key === "ArrowLeft" && currentLane > 0) {
     currentLane--;
     updatePlayerPosition();
@@ -171,7 +157,6 @@ function onKeyDown(e) {
   }
 }
 
-// === HALANGAN ===
 function createObstacle() {
   const geometry = new THREE.BoxGeometry(1, 1 + Math.random() * 2, 1);
   const material = new THREE.MeshStandardMaterial({ color: 0xff5555 });
@@ -183,9 +168,8 @@ function createObstacle() {
   obstacles.push(obstacle);
 }
 
-// === ANIMASI LOOP ===
 function animate() {
-  if (gameOver || isPaused) return;
+  if (gameOver || isPaused || !player) return;
 
   animationId = requestAnimationFrame(animate);
   frame++;
@@ -230,7 +214,6 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// === MAIN MENU ===
 function goToMainMenu() {
   document.getElementById("startOverlay").style.display = "none";
   document.getElementById("start-screen").style.display = "flex";
@@ -245,12 +228,12 @@ function goToMainMenu() {
   }
 }
 
-// === EVENT LISTENERS ===
+// === EVENT LISTENER ===
 document.getElementById("startBtn").addEventListener("click", startGame);
 document.getElementById("pauseBtn").addEventListener("click", togglePause);
 document.getElementById("menuBtn").addEventListener("click", goToMainMenu);
 document.getElementById("resumeBtn").addEventListener("click", () => {
-  if (!gameOver && renderer && isPaused) {
+  if (!gameOver && renderer && isPaused && player) {
     isPaused = false;
     document.getElementById("pauseOverlay").style.display = "none";
     document.getElementById("pauseBtn").style.display = "block";
