@@ -1,0 +1,160 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: "Press Start 2P", cursive;
+  background-color: #1a1a2e;
+}
+
+canvas {
+  display: block;
+}
+
+#scoreDisplay {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: white;
+  font-size: 18px;
+  z-index: 150;
+  font-family: "Press Start 2P", cursive;
+  text-shadow: 2px 2px 0 #000;
+}
+
+#game-over,
+#start-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+  color: white;
+}
+
+.pixel-button {
+  background-color: #4ade80;
+  color: #1a1a2e;
+  border: none;
+  padding: 15px 30px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 18px;
+  margin-top: 30px;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 5px 5px 0 #166534;
+  transition: all 0.1s;
+}
+
+.pixel-button:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 #166534;
+}
+
+.pixel-button:active {
+  transform: translate(5px, 5px);
+  box-shadow: 0 0 0 #166534;
+}
+
+.pixel-text {
+  text-shadow: 5px 5px 0 #4ade80;
+  color: white;
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.pixel-subtext {
+  color: #4ade80;
+  font-size: 16px;
+  max-width: 500px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.ground {
+  position: absolute;
+  width: 100%;
+  height: 100px;
+  bottom: 0;
+  background-color: #166534;
+  z-index: 1;
+}
+
+.pixel-border {
+  border: 4px solid white;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
+}
+
+#startOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+  color: white;
+  text-align: center;
+}
+
+#startOverlay h2 {
+  font-size: 32px;
+  color: #4ade80;
+  text-shadow: 3px 3px 0 #166534;
+  margin-bottom: 30px;
+}
+
+#pauseBtn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 150;
+}
+
+#pauseOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 300;
+  color: white;
+}
+
+.pause-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pause-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  color: #4ade80;
+  text-shadow: 2px 2px #166534;
+}
+
+#resumeBtn {
+  margin-top: 20px;
+}
