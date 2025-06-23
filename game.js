@@ -62,14 +62,16 @@ function initGame() {
   scene.add(background);
 
   // Tanah
-  const groundTexture = textureLoader.load("tanah.jpg"); // atau "assets/tanah.jpg" kalau di folder
+  const groundTexture = textureLoader.load(
+    "https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/floor/tekstur_lantai.jpg"
+  );
   groundTexture.wrapS = THREE.RepeatWrapping;
   groundTexture.wrapT = THREE.RepeatWrapping;
-  groundTexture.repeat.set(1, 20); // bisa disesuaikan
-
-  const groundMaterial = new THREE.MeshStandardMaterial({ map: groundTexture });
-
-  ground = new THREE.Mesh(new THREE.PlaneGeometry(8, 100), groundMaterial);
+  groundTexture.repeat.set(2, 20); // Ubah sesuai kebutuhan
+  ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(12, 100),
+    new THREE.MeshStandardMaterial({ map: groundTexture })
+  );
   ground.rotation.x = -Math.PI / 2;
   ground.position.z = -45;
   scene.add(ground);
