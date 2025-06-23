@@ -1,3 +1,4 @@
+// === Deklarasi variabel global ===
 let scene, camera, renderer;
 let player, ground, background;
 let frame, gameOver, obstacles, currentLane, score, speed;
@@ -6,7 +7,7 @@ let trees = [];
 let animationId;
 let keyListenerAttached = false;
 
-// === TOGGLE PAUSE ===
+// === Fungsi untuk pause dan resume game ===
 function togglePause() {
   if (gameOver || !renderer) return;
 
@@ -21,14 +22,14 @@ function togglePause() {
   } else {
     pauseBtn.style.display = "block";
     pauseOverlay.style.display = "none";
-    animate();
+    animate(); // Lanjutkan animasi saat resume
   }
 }
 
-// === INISIALISASI GAME ===
+// === Inisialisasi dan setup awal game ===
 function initGame() {
+  // Buat scene dan kamera
   scene = new THREE.Scene();
-
   camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -38,13 +39,16 @@ function initGame() {
   camera.position.set(0, 5, 8);
   camera.lookAt(0, 0, -10);
 
+  // Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
+  // Pencahayaan
   const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
   scene.add(light);
 
+  // Background
   const textureLoader = new THREE.TextureLoader();
   const bgTexture = textureLoader.load("https://i.imgur.com/FWUh1Ym.png");
   const bgMaterial = new THREE.MeshBasicMaterial({
@@ -55,14 +59,16 @@ function initGame() {
   background.position.set(0, 20, -80);
   scene.add(background);
 
+  // Tanah
   ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(8, 100),
+    new THREE.PlaneGeometry(15, 100),
     new THREE.MeshStandardMaterial({ color: 0x222222 })
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.z = -45;
   scene.add(ground);
 
+  // Pohon di pinggir jalan
   trees = [];
   const treeMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
   const leafMat = new THREE.MeshStandardMaterial({ color: 0x006400 });
@@ -78,11 +84,12 @@ function initGame() {
     group.add(trunk);
     group.add(leaves);
     group.position.z = -10 - i * 10;
-    group.position.x = Math.random() > 0.5 ? -4 : 4;
+    group.position.x = Math.random() > 0.5 ? -7 : 7;
     trees.push(group);
     scene.add(group);
   }
 
+  // Reset status game
   currentLane = 1;
   frame = 0;
   gameOver = false;
@@ -91,22 +98,24 @@ function initGame() {
   speed = 0.5;
   updateScore();
 
+  // Tambahkan kontrol keyboard hanya sekali
   if (!keyListenerAttached) {
     document.addEventListener("keydown", onKeyDown);
     keyListenerAttached = true;
   }
 
-  // Load 3D PLAYER
+  // Load model player 3D
   const loader = new THREE.GLTFLoader();
   loader.load(
     "https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/bush_ball/source/bush-ball.glb",
     (gltf) => {
       player = gltf.scene;
-      player.scale.set(1.5, 1.5, 1.5);
+      player.scale.set(1, 1, 1);
       player.position.y = 0.3;
+      player.position.z = 3 ;
       scene.add(player);
       updatePlayerPosition();
-      animate();
+      animate(); // Mulai game setelah player dimuat
     },
     undefined,
     (error) => {
@@ -115,10 +124,12 @@ function initGame() {
   );
 }
 
+// === Update skor ke layar ===
 function updateScore() {
   document.getElementById("scoreDisplay").innerText = `Score: ${score}`;
 }
 
+// === Fungsi mulai ulang game ===
 function startGame() {
   document.getElementById("start-screen").style.display = "none";
   document.getElementById("startOverlay").style.display = "none";
@@ -130,6 +141,7 @@ function startGame() {
   isPaused = false;
   gameOver = false;
 
+  // Reset dan hapus renderer lama
   if (renderer) {
     cancelAnimationFrame(animationId);
     renderer.dispose();
@@ -137,15 +149,17 @@ function startGame() {
     renderer = null;
   }
 
-  initGame();
+  initGame(); // Setup ulang game
 }
 
+// === Update posisi player sesuai lane ===
 function updatePlayerPosition() {
   if (!player) return;
-  const xPos = [-2.5, 0, 2.5];
+  const xPos = [-3, 0, 3];
   player.position.x = xPos[currentLane];
 }
 
+// === Deteksi input keyboard kiri-kanan ===
 function onKeyDown(e) {
   if (gameOver || isPaused) return;
   if (e.key === "ArrowLeft" && currentLane > 0) {
@@ -157,23 +171,26 @@ function onKeyDown(e) {
   }
 }
 
+// === Buat obstacle secara acak ===
 function createObstacle() {
   const geometry = new THREE.BoxGeometry(1, 1 + Math.random() * 2, 1);
   const material = new THREE.MeshStandardMaterial({ color: 0xff5555 });
   const obstacle = new THREE.Mesh(geometry, material);
-  const laneX = [-2.5, 0, 2.5];
+  const laneX = [-3, 0, 3];
   const lane = laneX[Math.floor(Math.random() * 3)];
   obstacle.position.set(lane, geometry.parameters.height / 2, -60);
   scene.add(obstacle);
   obstacles.push(obstacle);
 }
 
+// === Loop animasi utama game ===
 function animate() {
   if (gameOver || isPaused || !player) return;
 
   animationId = requestAnimationFrame(animate);
   frame++;
 
+  // Gerakkan obstacle dan cek tabrakan
   for (let i = obstacles.length - 1; i >= 0; i--) {
     const obs = obstacles[i];
     obs.position.z += speed;
@@ -191,6 +208,7 @@ function animate() {
       }, 100);
     }
 
+    // Hapus obstacle jika sudah lewat
     if (obs.position.z > 10) {
       scene.remove(obs);
       obstacles.splice(i, 1);
@@ -201,11 +219,14 @@ function animate() {
     }
   }
 
+  // Buat obstacle setiap beberapa frame
   if (frame % 90 === 0) createObstacle();
 
+  // Parallax background
   background.position.z += 0.01;
   if (background.position.z > -20) background.position.z = -80;
 
+  // Gerakkan pohon
   trees.forEach((tree) => {
     tree.position.z += speed;
     if (tree.position.z > 10) tree.position.z = -80;
@@ -214,6 +235,7 @@ function animate() {
   renderer.render(scene, camera);
 }
 
+// === Kembali ke menu utama ===
 function goToMainMenu() {
   document.getElementById("startOverlay").style.display = "none";
   document.getElementById("start-screen").style.display = "flex";
@@ -228,7 +250,7 @@ function goToMainMenu() {
   }
 }
 
-// === EVENT LISTENER ===
+// === Event listener untuk tombol-tombol ===
 document.getElementById("startBtn").addEventListener("click", startGame);
 document.getElementById("pauseBtn").addEventListener("click", togglePause);
 document.getElementById("menuBtn").addEventListener("click", goToMainMenu);
