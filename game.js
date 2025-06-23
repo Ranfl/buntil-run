@@ -48,8 +48,10 @@ function initGame() {
   const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
   scene.add(light);
 
-  // Background
+// loader untuk tekstur
   const textureLoader = new THREE.TextureLoader();
+
+  // Background
   const bgTexture = textureLoader.load("https://i.imgur.com/FWUh1Ym.png");
   const bgMaterial = new THREE.MeshBasicMaterial({
     map: bgTexture,
@@ -60,14 +62,17 @@ function initGame() {
   scene.add(background);
 
   // Tanah
-  ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(15, 100),
-    new THREE.MeshStandardMaterial({ color: 0x222222 })
-  );
+  const groundTexture = textureLoader.load("tanah.jpg"); // atau "assets/tanah.jpg" kalau di folder
+  groundTexture.wrapS = THREE.RepeatWrapping;
+  groundTexture.wrapT = THREE.RepeatWrapping;
+  groundTexture.repeat.set(1, 20); // bisa disesuaikan
+
+  const groundMaterial = new THREE.MeshStandardMaterial({ map: groundTexture });
+
+  ground = new THREE.Mesh(new THREE.PlaneGeometry(8, 100), groundMaterial);
   ground.rotation.x = -Math.PI / 2;
   ground.position.z = -45;
   scene.add(ground);
-
   // Pohon di pinggir jalan
   trees = [];
   const treeMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
