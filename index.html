@@ -3,42 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <title>Buntil Run</title>
-<script src="https://cdn.jsdelivr.net/npm/three@0.140.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.140.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.140.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.140.0/examples/js/loaders/GLTFLoader.js"></script>
     <link rel="stylesheet" href="style.css" />
-
-
   </head>
+  
   <body>
     <audio id="menuMusic" autoplay loop>
-      <source src="https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/music/AdhesiveWombat%20-%20Night%20Shade%20%E2%99%AB%20NO%20COPYRIGHT%208-bit%20Music.mp3" type="audio/mp3" />
+      <source
+        src="https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/music/AdhesiveWombat%20-%20Night%20Shade%20%E2%99%AB%20NO%20COPYRIGHT%208-bit%20Music.mp3"
+        type="audio/mp3"
+      />
     </audio>
-    
-  
+
     <!-- Start Screen -->
     <div id="start-screen">
       <h1 class="pixel-text">BUNTIL RUN</h1>
       <p class="pixel-subtext">Help Buntil untuk menghindari rintangan!</p>
       <p class="pixel-subtext">Gunakan panah kiri & kanan untuk bergerak</p>
-      <button id="startBtn" onclick="startGame()" class="pixel-button pixel-border">START GAME</button>
+      <button
+        id="startBtn"
+        onclick="startGame()"
+        class="pixel-button pixel-border"
+      >
+        START GAME
+      </button>
     </div>
 
     <!-- Pause Button -->
-    <button id="pauseBtn" class="pixel-button" style="display: none; position: absolute; top: 20px; left: 20px; z-index: 150;">⏸ Pause</button>
+    <button
+      id="pauseBtn"
+      class="pixel-button"
+      style="
+        display: none;
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 150;
+      "
+    >
+      ⏸ Pause
+    </button>
 
     <!-- Score Display -->
     <div id="scoreDisplay">Score: 0</div>
 
     <!-- Game Over Overlay -->
-    <div id="startOverlay" style="display: none;">
+    <div id="startOverlay" style="display: none">
       <h2>Game Over</h2>
       <p id="finalScore"></p>
       <button class="pixel-button" onclick="startGame()">Main Lagi</button>
-      <button class="pixel-button" onclick="goToMainMenu()">Ke Menu Utama</button>
+      <button class="pixel-button" onclick="goToMainMenu()">
+        Ke Menu Utama
+      </button>
     </div>
 
     <!-- Pause Overlay -->
-    <div id="pauseOverlay" style="display: none;">
+    <div id="pauseOverlay" style="display: none">
       <div class="pixel-text">Game Paused</div>
       <button id="resumeBtn" class="pixel-button">▶ Resume</button>
       <button id="menuBtn" class="pixel-button">Main Menu</button>
