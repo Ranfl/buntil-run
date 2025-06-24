@@ -10,7 +10,6 @@ body {
   overflow: hidden;
 }
 
-
 canvas {
   position: absolute;
   top: 0;
@@ -52,7 +51,29 @@ canvas {
   align-items: center;
   z-index: 200;
   color: white;
+  background-image: url("https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/background/bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
+
+/* ✅ Layer gelap agar teks tetap terbaca */
+#start-screen::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 0;
+}
+
+/* ✅ Biar teks dan tombol muncul di atas layer hitam */
+#start-screen h1,
+#start-screen .pixel-subtext,
+#start-screen button {
+  position: relative;
+  z-index: 1;
+}
+
 @keyframes pulse {
   from {
     filter: brightness(1);
@@ -99,6 +120,7 @@ canvas {
   max-width: 500px;
   text-align: center;
   line-height: 1.5;
+  text-shadow: 1px 1px 2px #000; /* ✅ Tambahan agar kontras */
 }
 
 .ground {
