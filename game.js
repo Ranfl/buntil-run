@@ -1,5 +1,3 @@
-// BuntilRunV2 - Upgrade Visual (Cleaned)
-
 let scene, camera, renderer;
 let player, ground;
 let skyLayer, mountainLayer;

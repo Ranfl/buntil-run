@@ -57,7 +57,6 @@ canvas {
   background-repeat: no-repeat;
 }
 
-/* ✅ Layer gelap agar teks tetap terbaca */
 #start-screen::before {
   content: "";
   position: absolute;
@@ -66,7 +65,6 @@ canvas {
   z-index: 0;
 }
 
-/* ✅ Biar teks dan tombol muncul di atas layer hitam */
 #start-screen h1,
 #start-screen .pixel-subtext,
 #start-screen button {
@@ -120,7 +118,7 @@ canvas {
   max-width: 500px;
   text-align: center;
   line-height: 1.5;
-  text-shadow: 1px 1px 2px #000; /* ✅ Tambahan agar kontras */
+  text-shadow: 1px 1px 2px #000;
 }
 
 .ground {
