@@ -1,4 +1,4 @@
-// BuntilRunV2 - Upgrade Visual
+// BuntilRunV2 - Upgrade Visual (Cleaned)
 
 let scene, camera, renderer;
 let player, ground;
@@ -123,21 +123,18 @@ function initGround() {
             metalness: 0.2,
           });
 
-          const leftGround = new THREE.Mesh(
-            new THREE.PlaneGeometry(100, 100),
-            sideMat
-          );
-          leftGround.rotation.x = -Math.PI / 2;
-          leftGround.position.set(-56, 0.01, -45);
-          scene.add(leftGround);
+          const makeSide = (x) => {
+            const mesh = new THREE.Mesh(
+              new THREE.PlaneGeometry(100, 100),
+              sideMat
+            );
+            mesh.rotation.x = -Math.PI / 2;
+            mesh.position.set(x, 0.01, -45);
+            scene.add(mesh);
+          };
 
-          const rightGround = new THREE.Mesh(
-            new THREE.PlaneGeometry(100, 100),
-            sideMat
-          );
-          rightGround.rotation.x = -Math.PI / 2;
-          rightGround.position.set(56, 0.01, -45);
-          scene.add(rightGround);
+          makeSide(-56);
+          makeSide(56);
         }
       );
     }
@@ -179,7 +176,6 @@ function initTrees() {
     const tree = new THREE.Group();
     tree.add(trunk);
     tree.add(leafGroup);
-
     tree.position.z = -10 - i * 12;
     tree.position.x = Math.random() > 0.5 ? -10 : 10;
     trees.push(tree);
@@ -239,6 +235,10 @@ function animate() {
     ) {
       cameraShake();
       gameOver = true;
+
+      const bgm = document.getElementById("menuMusic");
+      if (bgm) bgm.pause();
+
       setTimeout(() => {
         document.getElementById(
           "finalScore"
@@ -261,15 +261,6 @@ function animate() {
   }
 
   if (frame % obstacleInterval === 0) createObstacle();
-
-  if (skyLayer) {
-    skyLayer.position.z += 0.005;
-    if (skyLayer.position.z > -10) skyLayer.position.z = -90;
-  }
-  if (mountainLayer) {
-    mountainLayer.position.z += 0.01;
-    if (mountainLayer.position.z > -10) mountainLayer.position.z = -70;
-  }
   if (ground && ground.material && ground.material.map) {
     ground.material.map.offset.y += speed * 0.005;
   }
@@ -364,13 +355,13 @@ function cameraShake() {
 }
 
 function startGame() {
+  const bgm = document.getElementById("menuMusic");
+  if (bgm && !bgm.paused) bgm.pause();
   const startScreen = document.getElementById("start-screen");
   const overlay = document.getElementById("startOverlay");
   const pauseOverlay = document.getElementById("pauseOverlay");
   const pauseBtn = document.getElementById("pauseBtn");
   const finalScore = document.getElementById("finalScore");
-  const bgm = document.getElementById("menuMusic");
-  if (bgm) bgm.pause();
 
   if (startScreen) startScreen.style.display = "none";
   if (overlay) overlay.style.display = "none";
@@ -407,6 +398,8 @@ function togglePause() {
 }
 
 function goToMainMenu() {
+  const bgm = document.getElementById("menuMusic");
+  if (bgm) bgm.pause();
   const startScreen = document.getElementById("start-screen");
   const overlay = document.getElementById("startOverlay");
   const pauseOverlay = document.getElementById("pauseOverlay");
@@ -426,15 +419,43 @@ function goToMainMenu() {
     renderer = null;
   }
 }
+document.getElementById("scoreDisplay").style.display = "none";
+document.getElementById("startBtn")?.addEventListener("click", () => {
+  const bgm = document.getElementById("menuMusic");
+  if (bgm) {
+    bgm.play().catch((e) => {
+      console.warn(
+        "Autoplay ditolak oleh browser. Menunggu interaksi user.",
+        e
+      );
+    });
+  }
+});
+document.getElementById("pauseBtn")?.addEventListener("click", () => {
+  if (gameOver || !renderer) return;
+  isPaused = true;
 
-document.getElementById("startBtn")?.addEventListener("click", startGame);
-document.getElementById("pauseBtn")?.addEventListener("click", togglePause);
+  document.getElementById("pauseOverlay").style.display = "flex";
+  document.getElementById("pauseBtn").style.display = "none";
+
+  const bgm = document.getElementById("menuMusic");
+  if (bgm) bgm.pause();
+});
 document.getElementById("menuBtn")?.addEventListener("click", goToMainMenu);
+document.getElementById("scoreDisplay").style.display = "block";
 document.getElementById("resumeBtn")?.addEventListener("click", () => {
   if (!gameOver && renderer && isPaused && player) {
     isPaused = false;
     document.getElementById("pauseOverlay").style.display = "none";
     document.getElementById("pauseBtn").style.display = "block";
+
+    const bgm = document.getElementById("menuMusic");
+    if (bgm) {
+      bgm.play().catch((e) => {
+        console.warn("Gagal memutar ulang musik saat resume:", e);
+      });
+    }
+
     animate();
   }
 });

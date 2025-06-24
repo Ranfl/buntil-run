@@ -5,13 +5,11 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
+  font-family: "Press Start 2P", cursive;
+  background-color: #1a1a2e;
   overflow: hidden;
 }
 
-body {
-  font-family: "Press Start 2P", cursive;
-  background-color: #1a1a2e;
-}
 
 canvas {
   position: absolute;
@@ -25,7 +23,7 @@ canvas {
 #pauseOverlay,
 #pauseBtn,
 #scoreDisplay {
-  z-index: 10; /* atau lebih tinggi dari canvas */
+  z-index: 10;
   position: absolute;
 }
 
@@ -54,10 +52,6 @@ canvas {
   align-items: center;
   z-index: 200;
   color: white;
-  background-image: url("https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/background/menu-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  animation: pulse 6s infinite alternate;
 }
 @keyframes pulse {
   from {
