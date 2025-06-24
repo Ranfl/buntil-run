@@ -29,7 +29,6 @@ canvas {
   position: absolute;
 }
 
-
 #scoreDisplay {
   position: absolute;
   top: 20px;
@@ -55,6 +54,18 @@ canvas {
   align-items: center;
   z-index: 200;
   color: white;
+  background-image: url("https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/background/menu-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  animation: pulse 6s infinite alternate;
+}
+@keyframes pulse {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.2);
+  }
 }
 
 .pixel-button {
@@ -82,8 +93,8 @@ canvas {
 }
 
 .pixel-text {
-  text-shadow: 5px 5px 0 #4ade80;
-  color: white;
+  text-shadow: 4px 4px 0 #4ade80, 0 0 15px #4ade80;
+  color: #ffffff;
   font-size: 48px;
   margin-bottom: 20px;
 }
@@ -172,8 +183,8 @@ canvas {
   margin-top: 20px;
 }
 
-
-#leftShade, #rightShade {
+#leftShade,
+#rightShade {
   position: absolute;
   top: 0;
   bottom: 0;

@@ -9,6 +9,7 @@ let trees = [];
 let animationId;
 let keyListenerAttached = false;
 const clock = new THREE.Clock();
+let obstacleInterval = 90;
 
 function initGame() {
   initScene();
@@ -25,8 +26,8 @@ function initGame() {
 
 function initScene() {
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x1a1a1a); // gelap seperti hutan
-  scene.fog = new THREE.Fog(0x1a1a1a, 30, 100); // efek kabut jarak jauh
+  scene.background = new THREE.Color(0x3a3a3a);
+  scene.fog = new THREE.Fog(0x1a1a1a, 30, 100);
 }
 
 function initCamera() {
@@ -87,48 +88,102 @@ function initBackground() {
 
 function initGround() {
   const loader = new THREE.TextureLoader();
+
   loader.load(
     "https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/floor/tekstur_lantai.jpg",
-    (texture) => {
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(2, 20);
+    (roadTexture) => {
+      roadTexture.wrapS = THREE.RepeatWrapping;
+      roadTexture.wrapT = THREE.RepeatWrapping;
+      roadTexture.repeat.set(2, 20);
+
       ground = new THREE.Mesh(
         new THREE.PlaneGeometry(12, 100),
-        new THREE.MeshStandardMaterial({ map: texture })
+        new THREE.MeshStandardMaterial({
+          map: roadTexture,
+          color: 0xbbbbbb,
+          metalness: 0.1,
+          roughness: 1,
+        })
       );
       ground.rotation.x = -Math.PI / 2;
-      ground.position.z = -45;
+      ground.position.set(0, 0, -45);
       scene.add(ground);
+
+      loader.load(
+        "https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/background/ground.jpg",
+        (sideTexture) => {
+          sideTexture.wrapS = THREE.RepeatWrapping;
+          sideTexture.wrapT = THREE.RepeatWrapping;
+          sideTexture.repeat.set(40, 20);
+
+          const sideMat = new THREE.MeshStandardMaterial({
+            map: sideTexture,
+            color: 0x99c16e,
+            roughness: 1,
+            metalness: 0.2,
+          });
+
+          const leftGround = new THREE.Mesh(
+            new THREE.PlaneGeometry(100, 100),
+            sideMat
+          );
+          leftGround.rotation.x = -Math.PI / 2;
+          leftGround.position.set(-56, 0.01, -45);
+          scene.add(leftGround);
+
+          const rightGround = new THREE.Mesh(
+            new THREE.PlaneGeometry(100, 100),
+            sideMat
+          );
+          rightGround.rotation.x = -Math.PI / 2;
+          rightGround.position.set(56, 0.01, -45);
+          scene.add(rightGround);
+        }
+      );
     }
   );
 }
 
-
 function initTrees() {
   trees = [];
-  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x006400 });
+  const trunkMat = new THREE.MeshStandardMaterial({
+    color: 0x2b1a12,
+    roughness: 1,
+    metalness: 0.1,
+  });
+  const leafMat = new THREE.MeshStandardMaterial({
+    color: 0x2e6e3e,
+    roughness: 1,
+    metalness: 0,
+  });
 
   for (let i = 0; i < 10; i++) {
-    const trunkHeight = 0.8 + Math.random() * 0.4;
+    const trunkHeight = 4 + Math.random() * 2;
     const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.1, 0.1, trunkHeight),
+      new THREE.CylinderGeometry(0.3, 0.5, trunkHeight, 10),
       trunkMat
     );
-
-    const leafSize = 0.4 + Math.random() * 0.3;
-    const leaves = new THREE.Mesh(new THREE.SphereGeometry(leafSize), leafMat);
-
-    const group = new THREE.Group();
     trunk.position.y = trunkHeight / 2;
-    leaves.position.y = trunkHeight + 0.3;
-    group.add(trunk);
-    group.add(leaves);
-    group.position.z = -10 - i * 10;
-    group.position.x = Math.random() > 0.5 ? -7 : 7;
-    trees.push(group);
-    scene.add(group);
+
+    const leafGroup = new THREE.Group();
+    for (let j = 0; j < 3; j++) {
+      const leafSize = 1.2 - j * 0.2;
+      const leaf = new THREE.Mesh(
+        new THREE.SphereGeometry(leafSize, 12, 12),
+        leafMat
+      );
+      leaf.position.y = trunkHeight + j * 0.6;
+      leafGroup.add(leaf);
+    }
+
+    const tree = new THREE.Group();
+    tree.add(trunk);
+    tree.add(leafGroup);
+
+    tree.position.z = -10 - i * 12;
+    tree.position.x = Math.random() > 0.5 ? -10 : 10;
+    trees.push(tree);
+    scene.add(tree);
   }
 }
 
@@ -139,6 +194,7 @@ function initState() {
   obstacles = [];
   score = 0;
   speed = 0.5;
+  obstacleInterval = 90;
   updateScore();
 }
 
@@ -154,9 +210,7 @@ function loadPlayerModel() {
   loader.load(
     "https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/bush_ball/source/bush-ball.glb",
     (gltf) => {
-      if (player) {
-        scene.remove(player);
-      }
+      if (player) scene.remove(player);
       player = gltf.scene;
       player.scale.set(1, 1, 1);
       player.position.y = 0.3;
@@ -164,9 +218,7 @@ function loadPlayerModel() {
       scene.add(player);
       updatePlayerPosition();
       animate();
-    },
-    undefined,
-    (err) => console.error("❌ Gagal load model player:", err)
+    }
   );
 }
 
@@ -199,11 +251,16 @@ function animate() {
       obstacles.splice(i, 1);
       score++;
       updateScore();
-      if (score % 5 === 0) speed += 0.05;
+      if (score >= 10) {
+        speed = 0.8;
+        obstacleInterval = 60;
+      } else if (score % 5 === 0) {
+        speed += 0.05;
+      }
     }
   }
 
-  if (frame % 90 === 0) createObstacle();
+  if (frame % obstacleInterval === 0) createObstacle();
 
   if (skyLayer) {
     skyLayer.position.z += 0.005;
@@ -213,24 +270,58 @@ function animate() {
     mountainLayer.position.z += 0.01;
     if (mountainLayer.position.z > -10) mountainLayer.position.z = -70;
   }
-
+  if (ground && ground.material && ground.material.map) {
+    ground.material.map.offset.y += speed * 0.005;
+  }
   trees.forEach((tree) => {
-    tree.position.z += speed;
-    if (tree.position.z > 10) tree.position.z = -80;
+    tree.position.z += speed * 0.5;
+    if (tree.position.z > 10) tree.position.z = -100 - Math.random() * 20;
   });
-
   renderer.render(scene, camera);
 }
 
 function createObstacle() {
-  const geometry = new THREE.BoxGeometry(1, 1 + Math.random() * 2, 1);
-  const material = new THREE.MeshStandardMaterial({ color: 0xff5555 });
-  const obstacle = new THREE.Mesh(geometry, material);
   const laneX = [-3, 0, 3];
   const lane = laneX[Math.floor(Math.random() * 3)];
-  obstacle.position.set(lane, geometry.parameters.height / 2, -60);
+  const type = Math.random() < 0.5 ? "log" : "rock";
+  let obstacle;
+
+  if (type === "log") {
+    const length = 1 + Math.random() * 1.5;
+    const radius = 0.3 + Math.random() * 0.2;
+    const geometry = new THREE.CylinderGeometry(radius, radius, length, 16);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x4b2e1f,
+      roughness: 1,
+      metalness: 0.1,
+    });
+    obstacle = new THREE.Mesh(geometry, material);
+    obstacle.rotation.z = Math.PI / 2;
+    obstacle.position.set(lane, radius, -60);
+  } else {
+    const size = 0.8 + Math.random() * 0.8;
+    const geometry = new THREE.DodecahedronGeometry(size, 0);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x4d4d4d,
+      roughness: 0.9,
+      metalness: 0.05,
+    });
+    obstacle = new THREE.Mesh(geometry, material);
+    obstacle.position.set(lane, size / 2, -60);
+  }
+
   scene.add(obstacle);
   obstacles.push(obstacle);
+
+  if (score >= 10 && Math.random() < 0.3) {
+    const extraLane = laneX.filter((x) => x !== lane)[
+      Math.floor(Math.random() * 2)
+    ];
+    const extra = obstacle.clone();
+    extra.position.set(extraLane, obstacle.position.y, -60);
+    scene.add(extra);
+    obstacles.push(extra);
+  }
 }
 
 function updateScore() {
@@ -278,6 +369,8 @@ function startGame() {
   const pauseOverlay = document.getElementById("pauseOverlay");
   const pauseBtn = document.getElementById("pauseBtn");
   const finalScore = document.getElementById("finalScore");
+  const bgm = document.getElementById("menuMusic");
+  if (bgm) bgm.pause();
 
   if (startScreen) startScreen.style.display = "none";
   if (overlay) overlay.style.display = "none";
