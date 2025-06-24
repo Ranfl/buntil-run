@@ -14,8 +14,21 @@ body {
 }
 
 canvas {
-  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
 }
+
+#start-screen,
+#startOverlay,
+#pauseOverlay,
+#pauseBtn,
+#scoreDisplay {
+  z-index: 10; /* atau lebih tinggi dari canvas */
+  position: absolute;
+}
+
 
 #scoreDisplay {
   position: absolute;
@@ -157,4 +170,13 @@ canvas {
 
 #resumeBtn {
   margin-top: 20px;
+}
+
+
+#leftShade, #rightShade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100px;
+  z-index: 10;
 }

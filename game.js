@@ -1,35 +1,35 @@
-// === Deklarasi variabel global ===
+// BuntilRunV2 - Upgrade Visual
+
 let scene, camera, renderer;
-let player, ground, background;
+let player, ground;
+let skyLayer, mountainLayer;
 let frame, gameOver, obstacles, currentLane, score, speed;
 let isPaused = false;
 let trees = [];
 let animationId;
 let keyListenerAttached = false;
+const clock = new THREE.Clock();
 
-// === Fungsi untuk pause dan resume game ===
-function togglePause() {
-  if (gameOver || !renderer) return;
-
-  isPaused = !isPaused;
-
-  const pauseBtn = document.getElementById("pauseBtn");
-  const pauseOverlay = document.getElementById("pauseOverlay");
-
-  if (isPaused) {
-    pauseBtn.style.display = "none";
-    pauseOverlay.style.display = "flex";
-  } else {
-    pauseBtn.style.display = "block";
-    pauseOverlay.style.display = "none";
-    animate(); // Lanjutkan animasi saat resume
-  }
+function initGame() {
+  initScene();
+  initCamera();
+  initRenderer();
+  initLighting();
+  initBackground();
+  initGround();
+  initTrees();
+  initState();
+  initEventListeners();
+  loadPlayerModel();
 }
 
-// === Inisialisasi dan setup awal game ===
-function initGame() {
-  // Buat scene dan kamera
+function initScene() {
   scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a1a1a); // gelap seperti hutan
+  scene.fog = new THREE.Fog(0x1a1a1a, 30, 100); // efek kabut jarak jauh
+}
+
+function initCamera() {
   camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -38,56 +38,91 @@ function initGame() {
   );
   camera.position.set(0, 5, 8);
   camera.lookAt(0, 0, -10);
+}
 
-  // Renderer
+function initRenderer() {
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
+}
 
-  // Pencahayaan
+function initLighting() {
   const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
   scene.add(light);
+}
 
-// loader untuk tekstur
-  const textureLoader = new THREE.TextureLoader();
+function initBackground() {
+  const loader = new THREE.TextureLoader();
 
-  // Background
-  const bgTexture = textureLoader.load("https://i.imgur.com/FWUh1Ym.png");
-  const bgMaterial = new THREE.MeshBasicMaterial({
-    map: bgTexture,
-    side: THREE.BackSide,
-  });
-  background = new THREE.Mesh(new THREE.PlaneGeometry(100, 40), bgMaterial);
-  background.position.set(0, 20, -80);
-  scene.add(background);
-
-  // Tanah
-  const groundTexture = textureLoader.load(
-    "https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/floor/tekstur_lantai.jpg"
+  loader.load(
+    "https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/background/bg.jpg",
+    (texture) => {
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(5, 1);
+      skyLayer = new THREE.Mesh(
+        new THREE.PlaneGeometry(300, 60),
+        new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide })
+      );
+      skyLayer.position.set(0, 25, -100);
+      scene.add(skyLayer);
+    }
   );
-  groundTexture.wrapS = THREE.RepeatWrapping;
-  groundTexture.wrapT = THREE.RepeatWrapping;
-  groundTexture.repeat.set(2, 20); // Ubah sesuai kebutuhan
-  ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(12, 100),
-    new THREE.MeshStandardMaterial({ map: groundTexture })
+
+  loader.load(
+    "https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/background/bg.jpg",
+    (texture) => {
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(5, 1);
+      mountainLayer = new THREE.Mesh(
+        new THREE.PlaneGeometry(300, 50),
+        new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide })
+      );
+      mountainLayer.position.set(0, 20, -80);
+      scene.add(mountainLayer);
+    }
   );
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.z = -45;
-  scene.add(ground);
-  // Pohon di pinggir jalan
+}
+
+function initGround() {
+  const loader = new THREE.TextureLoader();
+  loader.load(
+    "https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/floor/tekstur_lantai.jpg",
+    (texture) => {
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 20);
+      ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(12, 100),
+        new THREE.MeshStandardMaterial({ map: texture })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.z = -45;
+      scene.add(ground);
+    }
+  );
+}
+
+
+function initTrees() {
   trees = [];
-  const treeMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
   const leafMat = new THREE.MeshStandardMaterial({ color: 0x006400 });
+
   for (let i = 0; i < 10; i++) {
+    const trunkHeight = 0.8 + Math.random() * 0.4;
     const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.1, 0.1, 1),
-      treeMat
+      new THREE.CylinderGeometry(0.1, 0.1, trunkHeight),
+      trunkMat
     );
-    const leaves = new THREE.Mesh(new THREE.SphereGeometry(0.5), leafMat);
+
+    const leafSize = 0.4 + Math.random() * 0.3;
+    const leaves = new THREE.Mesh(new THREE.SphereGeometry(leafSize), leafMat);
+
     const group = new THREE.Group();
-    trunk.position.y = 0.5;
-    leaves.position.y = 1.3;
+    trunk.position.y = trunkHeight / 2;
+    leaves.position.y = trunkHeight + 0.3;
     group.add(trunk);
     group.add(leaves);
     group.position.z = -10 - i * 10;
@@ -95,8 +130,9 @@ function initGame() {
     trees.push(group);
     scene.add(group);
   }
+}
 
-  // Reset status game
+function initState() {
   currentLane = 1;
   frame = 0;
   gameOver = false;
@@ -104,81 +140,88 @@ function initGame() {
   score = 0;
   speed = 0.5;
   updateScore();
+}
 
-  // Tambahkan kontrol keyboard hanya sekali
+function initEventListeners() {
   if (!keyListenerAttached) {
     document.addEventListener("keydown", onKeyDown);
     keyListenerAttached = true;
   }
+}
 
-  // Load model player 3D
+function loadPlayerModel() {
   const loader = new THREE.GLTFLoader();
   loader.load(
     "https://raw.githubusercontent.com/Ranfl/buntil-run/main/asset/bush_ball/source/bush-ball.glb",
     (gltf) => {
+      if (player) {
+        scene.remove(player);
+      }
       player = gltf.scene;
       player.scale.set(1, 1, 1);
       player.position.y = 0.3;
-      player.position.z = 3 ;
+      player.position.z = 3;
       scene.add(player);
       updatePlayerPosition();
-      animate(); // Mulai game setelah player dimuat
+      animate();
     },
     undefined,
-    (error) => {
-      console.error("❌ Gagal load model player:", error);
-    }
+    (err) => console.error("❌ Gagal load model player:", err)
   );
 }
 
-// === Update skor ke layar ===
-function updateScore() {
-  document.getElementById("scoreDisplay").innerText = `Score: ${score}`;
-}
+function animate() {
+  if (gameOver || isPaused || !player) return;
+  animationId = requestAnimationFrame(animate);
+  frame++;
 
-// === Fungsi mulai ulang game ===
-function startGame() {
-  document.getElementById("start-screen").style.display = "none";
-  document.getElementById("startOverlay").style.display = "none";
-  document.getElementById("pauseOverlay").style.display = "none";
-  document.getElementById("finalScore").innerText = "";
-  document.getElementById("pauseBtn").style.display = "block";
-  document.getElementById("pauseBtn").innerText = "⏸ Pause";
+  const t = clock.getElapsedTime();
+  player.position.y = 0.3 + Math.sin(t * 10) * 0.05;
 
-  isPaused = false;
-  gameOver = false;
-
-  // Reset dan hapus renderer lama
-  if (renderer) {
-    cancelAnimationFrame(animationId);
-    renderer.dispose();
-    document.body.removeChild(renderer.domElement);
-    renderer = null;
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const obs = obstacles[i];
+    obs.position.z += speed;
+    if (
+      Math.abs(obs.position.z - player.position.z) < 0.6 &&
+      Math.abs(obs.position.x - player.position.x) < 1
+    ) {
+      cameraShake();
+      gameOver = true;
+      setTimeout(() => {
+        document.getElementById(
+          "finalScore"
+        ).innerText = `Skor Akhir: ${score}`;
+        document.getElementById("startOverlay").style.display = "flex";
+      }, 100);
+    }
+    if (obs.position.z > 10) {
+      scene.remove(obs);
+      obstacles.splice(i, 1);
+      score++;
+      updateScore();
+      if (score % 5 === 0) speed += 0.05;
+    }
   }
 
-  initGame(); // Setup ulang game
-}
+  if (frame % 90 === 0) createObstacle();
 
-// === Update posisi player sesuai lane ===
-function updatePlayerPosition() {
-  if (!player) return;
-  const xPos = [-3, 0, 3];
-  player.position.x = xPos[currentLane];
-}
-
-// === Deteksi input keyboard kiri-kanan ===
-function onKeyDown(e) {
-  if (gameOver || isPaused) return;
-  if (e.key === "ArrowLeft" && currentLane > 0) {
-    currentLane--;
-    updatePlayerPosition();
-  } else if (e.key === "ArrowRight" && currentLane < 2) {
-    currentLane++;
-    updatePlayerPosition();
+  if (skyLayer) {
+    skyLayer.position.z += 0.005;
+    if (skyLayer.position.z > -10) skyLayer.position.z = -90;
   }
+  if (mountainLayer) {
+    mountainLayer.position.z += 0.01;
+    if (mountainLayer.position.z > -10) mountainLayer.position.z = -70;
+  }
+
+  trees.forEach((tree) => {
+    tree.position.z += speed;
+    if (tree.position.z > 10) tree.position.z = -80;
+  });
+
+  renderer.render(scene, camera);
 }
 
-// === Buat obstacle secara acak ===
 function createObstacle() {
   const geometry = new THREE.BoxGeometry(1, 1 + Math.random() * 2, 1);
   const material = new THREE.MeshStandardMaterial({ color: 0xff5555 });
@@ -190,83 +233,117 @@ function createObstacle() {
   obstacles.push(obstacle);
 }
 
-// === Loop animasi utama game ===
-function animate() {
-  if (gameOver || isPaused || !player) return;
-
-  animationId = requestAnimationFrame(animate);
-  frame++;
-
-  // Gerakkan obstacle dan cek tabrakan
-  for (let i = obstacles.length - 1; i >= 0; i--) {
-    const obs = obstacles[i];
-    obs.position.z += speed;
-
-    if (
-      Math.abs(obs.position.z - player.position.z) < 0.6 &&
-      Math.abs(obs.position.x - player.position.x) < 1
-    ) {
-      gameOver = true;
-      setTimeout(() => {
-        document.getElementById(
-          "finalScore"
-        ).innerText = `Skor Akhir: ${score}`;
-        document.getElementById("startOverlay").style.display = "flex";
-      }, 100);
-    }
-
-    // Hapus obstacle jika sudah lewat
-    if (obs.position.z > 10) {
-      scene.remove(obs);
-      obstacles.splice(i, 1);
-      score++;
-      updateScore();
-      if (score % 5 === 0) speed += 0.05;
-      if (score >= 20) speed += 0.03;
-    }
-  }
-
-  // Buat obstacle setiap beberapa frame
-  if (frame % 90 === 0) createObstacle();
-
-  // Parallax background
-  background.position.z += 0.01;
-  if (background.position.z > -20) background.position.z = -80;
-
-  // Gerakkan pohon
-  trees.forEach((tree) => {
-    tree.position.z += speed;
-    if (tree.position.z > 10) tree.position.z = -80;
-  });
-
-  renderer.render(scene, camera);
+function updateScore() {
+  document.getElementById("scoreDisplay").innerText = `Score: ${score}`;
 }
 
-// === Kembali ke menu utama ===
-function goToMainMenu() {
-  document.getElementById("startOverlay").style.display = "none";
-  document.getElementById("start-screen").style.display = "flex";
-  document.getElementById("pauseBtn").style.display = "none";
-  document.getElementById("pauseOverlay").style.display = "none";
+function updatePlayerPosition() {
+  if (!player) return;
+  const xPos = [-3, 0, 3];
+  player.position.x = xPos[currentLane];
+}
+
+function onKeyDown(e) {
+  if (gameOver || isPaused) return;
+  if (e.key === "ArrowLeft" && currentLane > 0) {
+    currentLane--;
+    updatePlayerPosition();
+  } else if (e.key === "ArrowRight" && currentLane < 2) {
+    currentLane++;
+    updatePlayerPosition();
+  }
+}
+
+function cameraShake() {
+  const intensity = 0.1;
+  const duration = 300;
+  const originalX = camera.position.x;
+  const start = Date.now();
+  const shake = () => {
+    const now = Date.now();
+    const elapsed = now - start;
+    if (elapsed < duration) {
+      camera.position.x = originalX + (Math.random() - 0.5) * intensity;
+      requestAnimationFrame(shake);
+    } else {
+      camera.position.x = originalX;
+    }
+  };
+  shake();
+}
+
+function startGame() {
+  const startScreen = document.getElementById("start-screen");
+  const overlay = document.getElementById("startOverlay");
+  const pauseOverlay = document.getElementById("pauseOverlay");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const finalScore = document.getElementById("finalScore");
+
+  if (startScreen) startScreen.style.display = "none";
+  if (overlay) overlay.style.display = "none";
+  if (pauseOverlay) pauseOverlay.style.display = "none";
+  if (pauseBtn) pauseBtn.style.display = "block";
+  if (finalScore) finalScore.innerText = "";
+
+  isPaused = false;
+  gameOver = false;
 
   if (renderer) {
     cancelAnimationFrame(animationId);
     renderer.dispose();
-    document.body.removeChild(renderer.domElement);
+    if (renderer.domElement && renderer.domElement.parentNode) {
+      renderer.domElement.parentNode.removeChild(renderer.domElement);
+    }
+    renderer = null;
+  }
+
+  initGame();
+}
+
+function togglePause() {
+  if (gameOver || !renderer) return;
+  isPaused = !isPaused;
+
+  const pauseOverlay = document.getElementById("pauseOverlay");
+  const pauseBtn = document.getElementById("pauseBtn");
+
+  if (pauseOverlay) pauseOverlay.style.display = isPaused ? "flex" : "none";
+  if (pauseBtn) pauseBtn.style.display = isPaused ? "none" : "block";
+
+  if (!isPaused) animate();
+}
+
+function goToMainMenu() {
+  const startScreen = document.getElementById("start-screen");
+  const overlay = document.getElementById("startOverlay");
+  const pauseOverlay = document.getElementById("pauseOverlay");
+  const pauseBtn = document.getElementById("pauseBtn");
+
+  if (startScreen) startScreen.style.display = "flex";
+  if (overlay) overlay.style.display = "none";
+  if (pauseOverlay) pauseOverlay.style.display = "none";
+  if (pauseBtn) pauseBtn.style.display = "none";
+
+  if (renderer) {
+    cancelAnimationFrame(animationId);
+    renderer.dispose();
+    if (renderer.domElement && renderer.domElement.parentNode) {
+      renderer.domElement.parentNode.removeChild(renderer.domElement);
+    }
     renderer = null;
   }
 }
 
-// === Event listener untuk tombol-tombol ===
-document.getElementById("startBtn").addEventListener("click", startGame);
-document.getElementById("pauseBtn").addEventListener("click", togglePause);
-document.getElementById("menuBtn").addEventListener("click", goToMainMenu);
-document.getElementById("resumeBtn").addEventListener("click", () => {
+document.getElementById("startBtn")?.addEventListener("click", startGame);
+document.getElementById("pauseBtn")?.addEventListener("click", togglePause);
+document.getElementById("menuBtn")?.addEventListener("click", goToMainMenu);
+document.getElementById("resumeBtn")?.addEventListener("click", () => {
   if (!gameOver && renderer && isPaused && player) {
     isPaused = false;
     document.getElementById("pauseOverlay").style.display = "none";
     document.getElementById("pauseBtn").style.display = "block";
-    document.getElementById("pauseBtn").innerText = "⏸ Pause";
     animate();
   }
 });
+
+window.startGame = startGame;
